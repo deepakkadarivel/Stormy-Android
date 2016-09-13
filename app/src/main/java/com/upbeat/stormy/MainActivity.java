@@ -14,7 +14,11 @@ import android.widget.Toast;
 
 import com.upbeat.stormy.weather.Current;
 import com.upbeat.stormy.ui.AlertDialogFragment;
+import com.upbeat.stormy.weather.Day;
+import com.upbeat.stormy.weather.Forecast;
+import com.upbeat.stormy.weather.Hour;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,7 +35,7 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private Current mCurrent;
+    private Forecast mForecast;
 
     @BindView(R.id.timeLabel) TextView mTimeLabel;
     @BindView(R.id.temperatureLabel) TextView mTemperatureLabel;
@@ -100,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                         String jsonData = response.body().string();
                         Log.v(TAG, jsonData);
                         if (response.isSuccessful()) {
-                            mCurrent = gerCurrentDetails(jsonData);
+                            mForecast = getForeCastDetails(jsonData);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -141,19 +145,76 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateDispaly() {
-        mTemperatureLabel.setText(mCurrent.getTemperature() + "");
-        mHumidityValue.setText(mCurrent.getHumidity() + "");
-        mIconImageView.setImageDrawable(getResources().getDrawable(mCurrent.getIconId()));
-        mPrecipValue.setText(mCurrent.getPrecipChance() + "%");
-        mSummaryLabel.setText(mCurrent.getSummary());
-        mTimeLabel.setText("At " + mCurrent.getFormattedTime() + " it will be.");
-        mLocationLabel.setText(mCurrent.getTimeZone());
+        Current current = mForecast.getCurrent();
+        mTemperatureLabel.setText(current.getTemperature() + "");
+        mHumidityValue.setText(current.getHumidity() + "");
+        mIconImageView.setImageDrawable(getResources().getDrawable(current.getIconId()));
+        mPrecipValue.setText(current.getPrecipChance() + "%");
+        mSummaryLabel.setText(current.getSummary());
+        mTimeLabel.setText("At " + current.getFormattedTime() + " it will be.");
+        mLocationLabel.setText(current.getTimeZone());
+    }
+
+    private Forecast getForeCastDetails(String jsonData) throws JSONException {
+        Forecast forecast = new Forecast();
+        forecast.setCurrent(gerCurrentDetails(jsonData));
+        forecast.setDailyForecast(getDailyForeCast(jsonData));
+        forecast.setHourlyForecast(getHourlyForecast(jsonData));
+        return forecast;
+    }
+
+    private Hour[] getHourlyForecast(String jsonData) throws JSONException {
+        JSONObject jsonObject = new JSONObject(jsonData);
+        String timezone = jsonObject.getString("timezone");
+        JSONObject hourly = jsonObject.getJSONObject("hourly");
+        JSONArray data = hourly.getJSONArray("data");
+
+        Hour[] hours = new Hour[data.length()];
+
+        for (int i = 0; i < hours.length; i++) {
+            JSONObject jsonHour = data.getJSONObject(i);
+            Hour hour = new Hour();
+
+            hour.setIcon(jsonHour.getString("icon"));
+            hour.setSummary(jsonHour.getString("summary"));
+            hour.setTemperature(jsonHour.getDouble("temperature"));
+            hour.setTime(jsonHour.getLong("time"));
+            hour.setTimezone(timezone);
+
+            hours[i] = hour;
+        }
+
+        return hours;
+    }
+
+    private Day[] getDailyForeCast(String jsonData) throws JSONException {
+        JSONObject jsonObject = new JSONObject(jsonData);
+        String timezone = jsonObject.getString("timezone");
+        JSONObject daily = jsonObject.getJSONObject("daily");
+        JSONArray data = daily.getJSONArray("data");
+
+        Day[] days = new Day[data.length()];
+
+        for (int i = 0; i < days.length; i++) {
+            JSONObject jsonDay = data.getJSONObject(i);
+            Day day = new Day();
+
+            day.setIcon(jsonDay.getString("icon"));
+            day.setTime(jsonDay.getLong("time"));
+            day.setTimezone(timezone);
+            day.setSummary(jsonDay.getString("summary"));
+            day.setTemperatureMax(jsonDay.getDouble("temperatureMax"));
+
+            days[i] = day;
+        }
+
+        return days;
+
     }
 
     private Current gerCurrentDetails(String jsonData) throws JSONException {
         JSONObject jsonObject = new JSONObject(jsonData);
         String timezone = jsonObject.getString("timezone");
-        Log.i(TAG, timezone);
 
         JSONObject currently = jsonObject.getJSONObject("currently");
 
