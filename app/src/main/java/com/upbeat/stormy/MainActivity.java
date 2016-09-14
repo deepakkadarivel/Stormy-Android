@@ -1,6 +1,7 @@
 package com.upbeat.stormy;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.upbeat.stormy.ui.DailyForecast;
 import com.upbeat.stormy.weather.Current;
 import com.upbeat.stormy.ui.AlertDialogFragment;
 import com.upbeat.stormy.weather.Day;
@@ -26,6 +28,7 @@ import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -34,18 +37,28 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    public static final String TAG = MainActivity.class.getSimpleName();
+    public static final String DAILY_FORECAST = "DAILY_FORECAST";
     private Forecast mForecast;
 
-    @BindView(R.id.timeLabel) TextView mTimeLabel;
-    @BindView(R.id.temperatureLabel) TextView mTemperatureLabel;
-    @BindView(R.id.humidityValue) TextView mHumidityValue;
-    @BindView(R.id.precipValue) TextView mPrecipValue;
-    @BindView(R.id.summaryLabel) TextView mSummaryLabel;
-    @BindView(R.id.locationLabel) TextView mLocationLabel;
-    @BindView(R.id.iconImageView) ImageView mIconImageView;
-    @BindView(R.id.refreshImageView) ImageView mRefreshImageView;
-    @BindView(R.id.progressBar) ProgressBar mProgressBar;
+    @BindView(R.id.timeLabel)
+    TextView mTimeLabel;
+    @BindView(R.id.temperatureLabel)
+    TextView mTemperatureLabel;
+    @BindView(R.id.humidityValue)
+    TextView mHumidityValue;
+    @BindView(R.id.precipValue)
+    TextView mPrecipValue;
+    @BindView(R.id.summaryLabel)
+    TextView mSummaryLabel;
+    @BindView(R.id.locationLabel)
+    TextView mLocationLabel;
+    @BindView(R.id.iconImageView)
+    ImageView mIconImageView;
+    @BindView(R.id.refreshImageView)
+    ImageView mRefreshImageView;
+    @BindView(R.id.progressBar)
+    ProgressBar mProgressBar;
 
 
     @Override
@@ -114,11 +127,9 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             alertUserAboutError();
                         }
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         Log.e(TAG, "Exception Caught", e);
-                    }
-                    catch (JSONException e) {
+                    } catch (JSONException e) {
                         Log.e(TAG, "Exception Caught", e);
                     }
                     runOnUiThread(new Runnable() {
@@ -246,5 +257,12 @@ public class MainActivity extends AppCompatActivity {
     private void alertUserAboutError() {
         AlertDialogFragment dialogFragment = new AlertDialogFragment();
         dialogFragment.show(getFragmentManager(), "error_dialog");
+    }
+
+    @OnClick(R.id.dailyButton)
+    public void startDailyActivity(View view) {
+        Intent intent = new Intent(this, DailyForecast.class);
+        intent.putExtra(DAILY_FORECAST, mForecast.getDailyForecast());
+        startActivity(intent);
     }
 }
