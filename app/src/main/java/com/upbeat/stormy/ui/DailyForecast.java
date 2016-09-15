@@ -6,7 +6,10 @@ import android.os.Parcelable;
 import android.support.annotation.StringRes;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
 
 import com.upbeat.stormy.MainActivity;
 import com.upbeat.stormy.R;
@@ -28,5 +31,16 @@ public class DailyForecast extends ListActivity {
         mDays = Arrays.copyOf(parcelable, parcelable.length, Day[].class);
         DayAdapter adapter = new DayAdapter(this, mDays);
         setListAdapter(adapter);
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        String dayOfTheWeek = mDays[position].getDayOfTheWeek();
+        String maxTemperature = mDays[position].getTemperatureMax() + "";
+        String summary = mDays[position].getSummary();
+        String message = String.format("On %s the maximum temperature is %s and it will be %s", dayOfTheWeek, maxTemperature, summary);
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+
     }
 }
